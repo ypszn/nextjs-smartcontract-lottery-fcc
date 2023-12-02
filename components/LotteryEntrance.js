@@ -7,6 +7,7 @@ import { useNotification } from "web3uikit"
 
 export default function LotteryEntrance() {
     const { chainId: chainIdHex, isWeb3Enabled } = useMoralis()
+    // These get re-rendered every time due to our connect button!
     const chainId = parseInt(chainIdHex)
     const raffleAddress = chainId in contractAddresses ? contractAddresses[chainId][0] : null
     const [entranceFee, setEntranceFee] = useState("0")
@@ -27,6 +28,7 @@ export default function LotteryEntrance() {
         msgValue: entranceFee,
     })
 
+    /* View Functions */
     const { runContractFunction: getEntranceFee } = useWeb3Contract({
         abi: abi,
         contractAddress: raffleAddress,
@@ -49,6 +51,12 @@ export default function LotteryEntrance() {
     })
 
     async function updateUI() {
+        // Another way we could make a contract call:
+        // const options = { abi, contractAddress: raffleAddress }
+        // const fee = await Moralis.executeFunction({
+        //     functionName: "getEntranceFee",
+        //     ...options,
+        // })
         const entranceFeeFromCall = (await getEntranceFee()).toString()
         const numPlayersFromCall = (await getNumberOfPlayers()).toString()
         const recentWinnerFromCall = await getRecentWinner()
@@ -62,6 +70,18 @@ export default function LotteryEntrance() {
             updateUI()
         }
     }, [isWeb3Enabled])
+    // no list means it'll update everytime anything changes or happens
+    // empty list means it'll run once after the initial rendering
+    // and dependencies mean it'll run whenever those things in the list change
+
+    // An example filter for listening for events, we will learn more on this next Front end lesson
+    // const filter = {
+    //     address: raffleAddress,
+    //     topics: [
+    //         // the name of the event, parnetheses containing the data type of each event, no spaces
+    //         utils.id("RaffleEnter(address)"),
+    //     ],
+    // }
 
     const handleSuccess = async function (tx) {
         await tx.wait(1)
